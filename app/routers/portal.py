@@ -10,7 +10,7 @@ from pathlib import Path
 from typing import Any
 
 from fastapi import APIRouter, Body, Depends, File, Form, HTTPException, Request, UploadFile
-from fastapi.responses import FileResponse, RedirectResponse
+from fastapi.responses import FileResponse, RedirectResponse, StreamingResponse
 from sqlalchemy import func, or_, select
 from sqlalchemy.orm import Session
 
@@ -126,11 +126,17 @@ def serve_installer(db: Session):
     if url.startswith(("http://", "https://")):
         return RedirectResponse(url, status_code=302)
     if url.startswith(blob.SCHEME):
+        name = (r.file_name or "TallyConnector-Setup.exe").replace('"', "")
         try:
-            return RedirectResponse(blob.sas_url(url, r.file_name or "TallyConnector-Setup.exe"), status_code=302)
+            chunks, size = blob.open_stream(url)
         except Exception:  # noqa: BLE001
-            log.exception("Could not create SAS link for %s", url)
+            log.exception("Could not open installer blob %s", url)
             raise HTTPException(502, "Installer storage is temporarily unavailable")
+        return StreamingResponse(
+            chunks,
+            media_type="application/octet-stream",
+            headers={"Content-Disposition": f'attachment; filename="{name}"', "Content-Length": str(size)},
+        )
     local = STATIC / "blobs" / "TallyConnector-Setup.exe"
     if local.is_file():
         return FileResponse(local, filename=r.file_name or "TallyConnector-Setup.exe", media_type="application/vnd.microsoft.portable-executable")

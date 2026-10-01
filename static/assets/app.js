@@ -767,74 +767,11 @@
         <div class="panel section"><div class="panel-body"><ol class="how">
           <li class="${active.length ? "ok" : ""}"><div><h3>Install the connector</h3></div><div class="body">
             <p class="muted">Run the installer on the Windows PC where TallyPrime is used. It reads local data and needs internet access.</p>
-            
-            <div style="margin-top:12px; display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
+            <div style="margin-top:12px;">
               <a class="btn primary" href="${t.download_url || '/api/v1/portal/tally/download'}" download="TallyConnector-Setup.exe" style="display:inline-flex;align-items:center;gap:8px;font-weight:600;padding:10px 18px;">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                 Download for Windows (.exe)
               </a>
-              <button type="button" class="btn ghost small" data-action="toggle-blob-admin" style="font-size:12px;">
-                ⚙️ Blob Storage Settings
-              </button>
-            </div>
-
-            <div style="margin-top:10px; display:flex; align-items:center; gap:10px; flex-wrap:wrap; font-size:12px;">
-              <span class="chip good">Windows 64-bit &bull; ${t.installer?.version || 'v1.4.2'}</span>
-              <span class="muted">${t.installer?.file_size_formatted || '42.8 MB'}</span>
-              <span class="muted">&bull; Blob: <b style="color:var(--brand)">${t.installer?.source === 'blob_storage' ? 'Cloud Blob Storage' : 'Persistent Storage'}</b></span>
-            </div>
-
-            <div style="margin-top:8px; font-size:11.5px; color:var(--ink-3); font-family:monospace; display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
-              <span>SHA-256: ${t.installer?.sha256 ? t.installer.sha256.slice(0, 24) + '...' : '9f83a21b34c761e2f8d4...'}</span>
-              <button class="linkbtn small" data-action="copy" data-text="${t.installer?.sha256 || '9f83a21b34c761e2f8d40a23e198b472e90c561b3491f2a718d098e217c491a2'}" style="font-size:11px;">Copy Checksum</button>
-            </div>
-
-            <div id="blob-admin-box" style="display:none; margin-top:16px; padding:16px; background:var(--surface); border:1px solid var(--line); border-radius:var(--r-ctl);">
-              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-                <h4 style="margin:0; font-size:14px; font-weight:600; display:flex; align-items:center; gap:6px;">
-                  <span>☁️ Windows Installer Blob Storage</span>
-                </h4>
-                <span class="chip ${t.installer?.source === 'blob_storage' ? 'good' : ''}" style="font-size:11px;">Active</span>
-              </div>
-              <p class="muted small" style="margin-bottom:12px; line-height:1.45;">
-                Upload your compiled <b>TallyConnector-Setup.exe</b> to the application's persistent Blob store, or specify an external Cloud Storage (GCP GCS / Azure Blob Storage / AWS S3) public URL.
-              </p>
-
-              <div style="margin-bottom:14px; padding:10px 12px; background:var(--line-2); border-radius:var(--r-ctl); font-size:12px; word-break:break-all;">
-                <div class="muted" style="margin-bottom:3px; font-size:11px; text-transform:uppercase; letter-spacing:0.5px;">Active Blob Location:</div>
-                <code style="color:var(--brand); font-weight:600;">${t.installer?.blob_url || '/blobs/TallyConnector-Setup.exe'}</code>
-              </div>
-
-              <form id="blob-upload-form" style="margin-bottom:16px; padding-bottom:16px; border-bottom:1px solid var(--line-2);">
-                <div style="font-weight:600; font-size:13px; margin-bottom:8px;">Upload New .exe to Blob Storage:</div>
-                <div class="row" style="gap:10px; flex-wrap:wrap; align-items:flex-end;">
-                  <label class="field" style="margin:0; flex:1; min-width:180px;">
-                    <span>Installer file (.exe or .zip)</span>
-                    <input type="file" id="blob-file-input" name="installer" accept=".exe,.zip" required style="font-size:13px; padding:6px;">
-                  </label>
-                  <label class="field" style="margin:0; width:100px;">
-                    <span>Version</span>
-                    <input type="text" id="blob-version-input" name="version" placeholder="v1.4.3" value="${t.installer?.version || 'v1.4.3'}" style="font-size:13px;">
-                  </label>
-                  <button type="submit" class="btn primary small" id="blob-upload-btn" style="min-height:36px;">
-                    Upload to Blob
-                  </button>
-                </div>
-                <div id="blob-upload-progress" class="small muted" style="margin-top:6px; display:none;">Uploading installer to Blob storage...</div>
-              </form>
-
-              <form id="blob-config-form">
-                <div style="font-weight:600; font-size:13px; margin-bottom:6px;">Or Link External Cloud Blob Storage URL:</div>
-                <div class="row" style="gap:10px; flex-wrap:wrap; align-items:flex-end;">
-                  <label class="field" style="margin:0; flex:1; min-width:240px;">
-                    <span>GCS / Azure Blob / S3 Installer URL</span>
-                    <input type="url" id="external-blob-url-input" placeholder="https://storage.googleapis.com/.../TallyConnector-Setup.exe" value="${t.installer?.blob_url?.startsWith('http') ? t.installer.blob_url : ''}" style="font-size:13px;">
-                  </label>
-                  <button type="submit" class="btn small" style="min-height:36px;">
-                    Update Blob URL
-                  </button>
-                </div>
-              </form>
             </div>
           </div></li>
           <li><div><h3>Switch on Tally's local server</h3></div><div class="body">
@@ -1660,10 +1597,6 @@
     },
     "hist-filter": (el) => { hist.status = el.dataset.status; hist.offset = 0; drawHistory().catch((x) => toast(x.message, "bad")); },
     "hist-page": (el) => { hist.offset = Math.max(0, hist.offset + hist.limit * +el.dataset.dir); drawHistory().catch((x) => toast(x.message, "bad")); },
-    "toggle-blob-admin": () => {
-      const box = $("#blob-admin-box");
-      if (box) box.style.display = box.style.display === "none" ? "block" : "none";
-    },
   };
 
   document.addEventListener("click", (e) => {
@@ -1692,60 +1625,6 @@
       return;
     }
 
-    const blobUploadForm = e.target.closest("#blob-upload-form");
-    if (blobUploadForm) {
-      e.preventDefault();
-      const btn = $("#blob-upload-btn", blobUploadForm);
-      const prog = $("#blob-upload-progress");
-      const fileInput = $("#blob-file-input", blobUploadForm);
-      if (!fileInput || !fileInput.files || !fileInput.files[0]) {
-        toast("Please select an installer file (.exe or .zip)", "bad");
-        return;
-      }
-      btn.disabled = true;
-      if (prog) prog.style.display = "block";
-      try {
-        const formData = new FormData(blobUploadForm);
-        const res = await fetch("/api/v1/portal/tally/upload-installer", {
-          method: "POST",
-          headers: { Authorization: "Bearer " + state.token },
-          body: formData,
-        });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.detail || "Upload to blob failed");
-        toast(data.message || "Windows installer uploaded to blob storage!", "good");
-        PAGES.tally($("#view"));
-      } catch (ex) {
-        toast(ex.message, "bad");
-        btn.disabled = false;
-        if (prog) prog.style.display = "none";
-      }
-      return;
-    }
-
-    const blobConfigForm = e.target.closest("#blob-config-form");
-    if (blobConfigForm) {
-      e.preventDefault();
-      const btn = $("button[type=submit]", blobConfigForm);
-      const urlInput = $("#external-blob-url-input", blobConfigForm);
-      if (!urlInput || !urlInput.value.trim()) {
-        toast("Please enter a valid external Blob URL", "bad");
-        return;
-      }
-      btn.disabled = true;
-      try {
-        const res = await api("/portal/tally/installer-config", {
-          method: "PUT",
-          body: { blob_url: urlInput.value.trim() },
-        });
-        toast(res.message || "Blob storage URL updated!", "good");
-        PAGES.tally($("#view"));
-      } catch (ex) {
-        toast(ex.message, "bad");
-        btn.disabled = false;
-      }
-      return;
-    }
   });
 
   document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeModal(); });

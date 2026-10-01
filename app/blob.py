@@ -79,3 +79,11 @@ def sas_url(ref: str, download_name: str) -> str:
         udk = svc.get_user_delegation_key(now - timedelta(minutes=1), expiry)
         sas = generate_blob_sas(user_delegation_key=udk, **common)
     return f"{svc.url.rstrip('/')}/{container}/{quote(blob_name)}?{sas}"
+
+
+def open_stream(ref: str):
+    """Open an Azure blob reference for streaming through the app."""
+    container, _, blob_name = ref[len(SCHEME):].partition("/")
+    client = _service().get_blob_client(container=container, blob=blob_name)
+    size = client.get_blob_properties().size
+    return client.download_blob().chunks(), size
