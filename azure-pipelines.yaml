@@ -1,0 +1,88 @@
+# Azure Pipelines: runs on every push to main in Azure Repos.
+#   Test -> Deploy (build image in ACR, update Web App)
+#   MirrorToGitHub runs in parallel and always pushes main to GitHub (one-way mirror).
+#
+# Fill in the 4 placeholders under "variables", and create a secret pipeline variable GITHUB_PAT.
+
+trigger:
+  branches:
+    include: [main]
+
+pr: none
+
+pool:
+  vmImage: ubuntu-latest
+
+variables:
+  azureServiceConnection: 'manweta-azure'      # name of the Azure Resource Manager service connection
+  acrName: '<your-acr-name>'                    # registry name only, without .azurecr.io
+  webAppName: '<your-webapp-name>'
+  githubRepo: '<github-user-or-org>/manweta-fastapi'
+  imageName: 'manweta'
+
+resources:
+  containers:
+    - container: postgres
+      image: postgres:16-alpine
+      env:
+        POSTGRES_USER: test
+        POSTGRES_PASSWORD: test
+        POSTGRES_DB: test
+      ports:
+        - 5432:5432
+      options: --health-cmd "pg_isready -U test" --health-interval 5s --health-retries 10
+
+stages:
+  - stage: Test
+    jobs:
+      - job: test
+        services:
+          postgres: postgres
+        steps:
+          - task: UsePythonVersion@0
+            inputs:
+              versionSpec: '3.12'
+          - script: pip install -r requirements.txt
+            displayName: Install dependencies
+          - script: python -m pytest tests -q
+            displayName: Run tests
+            env:
+              DATABASE_URL: postgresql://test:test@localhost:5432/test
+
+  - stage: Deploy
+    dependsOn: Test
+    jobs:
+      - job: deploy
+        steps:
+          - task: AzureCLI@2
+            displayName: Build image in ACR
+            inputs:
+              azureSubscription: $(azureServiceConnection)
+              scriptType: bash
+              scriptLocation: inlineScript
+              workingDirectory: $(Build.SourcesDirectory)
+              inlineScript: |
+                az acr build -r "$(acrName)" -t "$(imageName):$(Build.SourceVersion)" .
+
+          - task: AzureWebApp@1
+            displayName: Deploy image to Web App
+            inputs:
+              azureSubscription: $(azureServiceConnection)
+              appType: webAppContainer
+              appName: $(webAppName)
+              imageName: $(acrName).azurecr.io/$(imageName):$(Build.SourceVersion)
+
+  - stage: MirrorToGitHub
+    dependsOn: []          # independent of Test/Deploy: GitHub always mirrors Azure Repos
+    jobs:
+      - job: mirror
+        steps:
+          - checkout: self
+            fetchDepth: 0
+            persistCredentials: false
+          - script: |
+              git push "https://x-access-token:${GITHUB_PAT}@github.com/${GITHUB_REPO}.git" HEAD:refs/heads/main
+            displayName: Push main to GitHub
+            env:
+              GITHUB_PAT: $(GITHUB_PAT)
+              GITHUB_REPO: $(githubRepo)
