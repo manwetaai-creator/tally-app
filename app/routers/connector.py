@@ -38,8 +38,15 @@ def activate(body: dict = Body(default={}), db: Session = Depends(get_db)):
     code.status, code.used_at = "used", now
     db.add(connector)
     db.flush()
-    return {"api_key": raw_key, "connector_id": connector.connector_code, "sync_interval_seconds": 3600}
 
+    tenant = db.get(Tenant, code.tenant_id)
+    return {
+        "api_key": raw_key,
+        "connector_id": connector.connector_code,
+        "tenant_id": tenant.tenant_code,
+        "company_name": tenant.name,
+        "sync_interval_seconds": 3600,
+    }
 
 @router.post("/api/v1/connector/sync")
 def sync(payload: dict[str, Any] = Body(default={}), connector: Connector = Depends(get_connector), db: Session = Depends(get_db)):
