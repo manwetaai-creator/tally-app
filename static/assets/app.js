@@ -1628,7 +1628,7 @@
   });
 
   document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeModal(); });
-  window.addEventListener("hashchange", () => { if (state.token && state.session) route(); });
+  window.addEventListener("hashchange", route);
 
   boot();
 })();
